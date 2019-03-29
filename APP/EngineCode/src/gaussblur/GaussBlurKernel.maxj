@@ -1,0 +1,48 @@
+package gaussblur;
+
+import com.maxeler.maxcompiler.v2.kernelcompiler.Kernel;
+import com.maxeler.maxcompiler.v2.kernelcompiler.KernelParameters;
+import com.maxeler.maxcompiler.v2.kernelcompiler.types.base.DFEType;
+import com.maxeler.maxcompiler.v2.kernelcompiler.types.base.DFEVar;
+
+class GaussBlurKernel extends Kernel {
+
+	private static final DFEType type = dfeInt(32);
+
+	protected GaussBlurKernel(KernelParameters parameters) {
+		super(parameters);
+
+		DFEVar inImage = io.input("inImage", dfeInt(32));
+		
+		int sideLength = 256;
+		
+		//Define the kernel
+		float[][] gaussMask  = {
+		    {1, 4, 7, 4, 1},
+		    {4, 16, 26, 16, 4},
+		    {7, 26, 41, 26, 7},
+		    {4, 16, 26, 16, 4},
+		    {1, 4, 7, 4, 1}
+		};
+		/*
+		for(int i=0; i<gaussMask.length; i++)
+		    for(int j=0; j<gaussMask.length; j++)
+		        gaussMask[i][j] /= 273.0;
+		*/
+		
+		      
+        DFEVar sum = constant.var(dfeInt(32), 0); 
+        for(int i=-2; i<3; i++){
+            for(int j=-2; j<3; j++){
+                DFEVar a = constant.var(dfeInt(32), 0);
+                a = stream.offset(inImage, sideLength*i + j);
+                sum = sum + a * gaussMask[i+2][j+2];
+            }
+        }
+        sum = sum / 273;
+        
+        
+		io.output("outImage", sum, sum.getType());
+	}
+}
+
